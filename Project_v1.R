@@ -2,6 +2,8 @@ library(readr)
 library(car)
 library(tseries)
 library(astsa)
+library(smooth)
+library(Mcomp)
 
 
 ############################################################STEP 1
@@ -66,6 +68,18 @@ kpss.test(Beijing_root)
 Beijing_TS1 <- ts(Beijing$AQI^(0.25),frequency = 90)
 plot(stl(Beijing_TS1,s.window = "per",t.window = 101))
 
+############################################################kernel estimation
+
+plot(Beijing_TS, type = "l")
+lines(ksmooth(time(Beijing_TS), Beijing_TS, "normal", bandwidth=3), lwd=2, col=2)
+par(fig = c(.65, 1, .65, 1), new = TRUE) # the insert
+
+
+smoothed_diff <- Beijing_TS - ksmooth(time(Beijing_TS), Beijing_TS, "normal", bandwidth=3)$y
+
+model_test <- sarima(smoothed_diff, p = 0, d = 0, q = 3 ) 
+
+model_test$fit$aic
 
 ############################################################STEP2
 
@@ -129,4 +143,6 @@ c("23", fit_ARMA23$aic,fit_ARMA23$loglik)
 c("31", fit_ARMA31$aic,fit_ARMA31$loglik)
 c("32", fit_ARMA32$aic,fit_ARMA32$loglik)
 c("33", fit_ARMA33$aic,fit_ARMA33$loglik)
+
+
 
