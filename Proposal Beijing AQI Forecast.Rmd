@@ -26,9 +26,10 @@ We begin first by examining the original dataset with a plot of the dataset and 
 
 
 ```{r, echo=FALSE}
-#Read 01/2018 dataframe
+#Read dataframe
 Beijing <- suppressMessages(read_csv("~/Desktop/Semestre 2/Time Series/Project/beijing23 - Sheet1.csv"))
 
+View(Beijing)
 par(mfrow = c(1, 3),pty = "s")
 #time series conversion
 Beijing_TS <- ts(Beijing$AQI)
@@ -52,9 +53,9 @@ $$
 where $D$ is the difference operator $D = I - B$ such that $D Y_{t} = Y_{t} - Y_{t-1}$. 
 
 ```{r, echo=FALSE}
-#log
+#logdiff transformation
 log_Beijing_TS <- log(Beijing_TS)
-
+diff_log_beijing <- diff(log_Beijing_TS)
 
 #plots
 par(mfrow = c(1, 3),lheight = 1,pty = "s")
@@ -71,6 +72,9 @@ pacf(diff_log_beijing, main = "Logdiff Dataset: PACF")
 ```
 
 ```{r}
+
+#####Box-Cox Transformations
+
 Beijing_root <- Beijing_TS^(0.25)
 
 #polynomial of order 10 try
@@ -85,10 +89,7 @@ acf(Beijing_root, main = "1/4 Dataset: ACF")
 
 #pacf
 pacf(Beijing_root, main = "1/4 Dataset: PACF")
-```
 
-```{r}
-kpss.test(log_beijing_TS)
 ```
 
 
@@ -100,10 +101,12 @@ kpss.test(diff_log_beijing)
 
 From the PACF graph of the detrended data, we can see that the AR model cannot be fitted because there is no obvious "shuts off" which shows suddenly decline to zero.  As for the ACF graph, since after lag 2 the values are almost between the confidence interval, an MA(2) model may be fitted.
 
+
 ```{r}
+#######Trying out STL Decomposition
+
 Beijing_TS1 <- ts(Beijing$AQI^(0.25),frequency = 90)
 plot(stl(Beijing_TS1,s.window = "per",t.window = 101))
 
-ceiling((1.5*7) / (1-(1.5/7)))
 ```
 
