@@ -1,7 +1,10 @@
 library(readr)
 library(car)
 library(tseries)
+library(astsa)
 
+
+############################################################STEP 1
 #Read dataframe
 Beijing <- suppressMessages(read_csv("~/Desktop/Semestre 2/Time Series/Project/beijing23 - Sheet1.csv"))
 
@@ -62,3 +65,31 @@ kpss.test(Beijing_root)
 
 Beijing_TS1 <- ts(Beijing$AQI^(0.25),frequency = 90)
 plot(stl(Beijing_TS1,s.window = "per",t.window = 101))
+
+
+############################################################STEP2
+
+###MA 4
+model_MA4 <- sarima(diff_log_beijing, p = 0, d = 0, q = 4) 
+fit4 <- model_MA4$fit
+
+
+###MA 3
+model_MA1 <- sarima(diff_log_beijing, p = 0, d = 0, q = 3) 
+fit1 <- model_MA1$fit
+
+
+###MA 2
+model_MA2 <- sarima(diff_log_beijing, p = 0, d = 0, q = 2) 
+fit2 <- model_MA2$fit
+
+
+###ARMA 
+model_ARMA11 <- sarima(diff_log_beijing, p = 1, d = 0, q = 1) 
+fit_ARMA11 <- model_ARMA11$fit
+
+#summary
+c(04, fit4$aic,fit4$loglik)
+c(03, fit1$aic,fit1$loglik)
+c(02, fit2$aic,fit2$loglik)
+c(11, fit_ARMA11$aic,fit_ARMA11$loglik)
