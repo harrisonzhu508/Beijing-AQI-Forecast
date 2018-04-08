@@ -84,12 +84,49 @@ model_MA2 <- sarima(diff_log_beijing, p = 0, d = 0, q = 2)
 fit2 <- model_MA2$fit
 
 
-###ARMA 
-model_ARMA11 <- sarima(diff_log_beijing, p = 1, d = 0, q = 1) 
-fit_ARMA11 <- model_ARMA11$fit
+###ARMA 12
+model_ARMA12 <- sarima(diff_log_beijing, p = 1, d = 0, q = 2) 
+fit_ARMA12 <- model_ARMA12$fit
+
+###ARMA 13
+model_ARMA13 <- sarima(diff_log_beijing, p = 1, d = 0, q = 3) 
+fit_ARMA13 <- model_ARMA13$fit
+
+###ARMA 21
+model_ARMA21 <- sarima(diff_log_beijing, p = 2, d = 0, q = 1) 
+fit_ARMA21 <- model_ARMA21$fit
+
+###ARMA 22
+model_ARMA22 <- sarima(diff_log_beijing, p = 2, d = 0, q = 2) 
+fit_ARMA22 <- model_ARMA22$fit
+
+###ARMA 22
+model_ARMA23 <- sarima(diff_log_beijing, p = 2, d = 0, q = 3) 
+fit_ARMA23 <- model_ARMA23$fit
+
+###ARMA 31
+model_ARMA31 <- sarima(diff_log_beijing, p = 3, d = 0, q = 1) 
+fit_ARMA31 <- model_ARMA31$fit
+
+###ARMA 32
+model_ARMA32 <- sarima(diff_log_beijing, p = 3, d = 0, q = 2) 
+fit_ARMA32 <- model_ARMA32$fit
+
+###ARMA 33
+model_ARMA33 <- sarima(diff_log_beijing, p = 3, d = 0, q = 3) 
+fit_ARMA33 <- model_ARMA33$fit
 
 #summary
-c(04, fit4$aic,fit4$loglik)
-c(03, fit1$aic,fit1$loglik)
-c(02, fit2$aic,fit2$loglik)
-c(11, fit_ARMA11$aic,fit_ARMA11$loglik)
+c("04", fit4$aic,fit4$loglik)
+c("03", fit1$aic,fit1$loglik)
+c("02", fit2$aic,fit2$loglik)
+c("11", fit_ARMA11$aic,fit_ARMA11$loglik)
+c("12", fit_ARMA12$aic,fit_ARMA12$loglik)
+c("13", fit_ARMA13$aic,fit_ARMA13$loglik)
+c("21", fit_ARMA21$aic,fit_ARMA21$loglik)
+c("22", fit_ARMA22$aic,fit_ARMA22$loglik)
+c("23", fit_ARMA23$aic,fit_ARMA23$loglik)
+c("31", fit_ARMA31$aic,fit_ARMA31$loglik)
+c("32", fit_ARMA32$aic,fit_ARMA32$loglik)
+c("33", fit_ARMA33$aic,fit_ARMA33$loglik)
+
