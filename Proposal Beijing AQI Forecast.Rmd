@@ -1,0 +1,109 @@
+---
+title: 'Proposal: Beijing AQI Forecast'
+author: "Harrison Zhu and Xinnuo Lin"
+date: "18 March 2018"
+output: pdf_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Loading libraries,echo = FALSE}
+library(readr)
+library(car)
+library(tseries)
+```
+#Description of the Dataset#
+The dataset contains Air Quality Indices(AQI) at Aoti Zhongxin, Beijing, China between the 2nd of January 2015 to the 30th of January 2018. The method to calculate the AQI can be found here: \url{https://en.wikipedia.org/wiki/Air_quality_index#Computing_the_AQI}.
+
+Initially, the dataset contained a lot of NA's. To take care of this, we took the AQI value at 12:00 everyday. Despite there still being NA's, we then completed the dataset by taking the average between the closest 2 times earlier and later than 12:00 each day. For example, we would take the average of the AQI values at 11:00 and 13:00. This may have consequences on the accuracy of our models, but as there were less than 100 missing values compared to the size of the dataset, which contains 1000+ data points, this incurs only a very minor penalty.
+
+#Exploratory Data Analysis#
+
+##Original Dataset##
+We begin first by examining the original dataset with a plot of the dataset and its ACF and PACF plots. To test for stationary, we use the KPSS test. 
+
+
+```{r, echo=FALSE}
+#Read 01/2018 dataframe
+Beijing <- suppressMessages(read_csv("~/Desktop/Semestre 2/Time Series/Project/beijing23 - Sheet1.csv"))
+
+par(mfrow = c(1, 3),pty = "s")
+#time series conversion
+Beijing_TS <- ts(Beijing$AQI)
+plot(Beijing_TS,main = "Original Dataset: Plot", xlab = "Time", ylab = "AQI")
+acf(Beijing_TS, main = "Original Dataset: ACF")
+pacf(Beijing_TS, main = "Original Dataset: PACF")
+
+#kpss test
+kpss.test(Beijing_TS)
+```
+
+
+We see that the $p$-value is lower than 10%, indicating that we have sufficient evidence reject the null hypothesis that there is stationary at 10% level. 
+
+##Transformed Dataset##
+
+We now transform our dataset via the $\log$ and difference transforms:
+$$
+Z_{t} := D\log(Y_{t}),
+$$
+where $D$ is the difference operator $D = I - B$ such that $D Y_{t} = Y_{t} - Y_{t-1}$. 
+
+```{r, echo=FALSE}
+#log
+log_Beijing_TS <- log(Beijing_TS)
+
+
+#plots
+par(mfrow = c(1, 3),lheight = 1,pty = "s")
+
+#diff
+diff_log_beijing <- diff(log_Beijing_TS)
+plot(diff_log_beijing,main = "Logdiff Dataset: Plot")
+
+#acf
+acf(diff_log_beijing, main = "Logdiff Dataset: ACF")
+
+#pacf
+pacf(diff_log_beijing, main = "Logdiff Dataset: PACF")
+```
+
+```{r}
+Beijing_root <- Beijing_TS^(0.25)
+
+#polynomial of order 10 try
+
+par(mfrow = c(1, 3),lheight = 1,pty = "s")
+
+
+plot(Beijing_root,main = "1/4 Dataset: Plot")
+
+#acf
+acf(Beijing_root, main = "1/4 Dataset: ACF")
+
+#pacf
+pacf(Beijing_root, main = "1/4 Dataset: PACF")
+```
+
+```{r}
+kpss.test(log_beijing_TS)
+```
+
+
+Via another KPSS test, we see that the $p$-value is great than 10%, indicating that we have insufficient evidence to reject the null hypothesis that there is stationary at 10% level. 
+```{r, echo= FALSE}
+#kpss test for stationarity
+kpss.test(diff_log_beijing)
+```
+
+From the PACF graph of the detrended data, we can see that the AR model cannot be fitted because there is no obvious "shuts off" which shows suddenly decline to zero.  As for the ACF graph, since after lag 2 the values are almost between the confidence interval, an MA(2) model may be fitted.
+
+```{r}
+Beijing_TS1 <- ts(Beijing$AQI^(0.25),frequency = 90)
+plot(stl(Beijing_TS1,s.window = "per",t.window = 101))
+
+ceiling((1.5*7) / (1-(1.5/7)))
+```
+
