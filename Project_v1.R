@@ -5,6 +5,9 @@ library(astsa)
 library(smooth)
 library(Mcomp)
 
+#square values of residuals
+#monte carlo simulate t noise
+#
 
 ############################################################STEP 1
 #Read dataframe
@@ -18,11 +21,15 @@ plot(Beijing_TS,main = "Original Dataset: Plot", xlab = "Time", ylab = "AQI")
 acf(Beijing_TS, main = "Original Dataset: ACF")
 pacf(Beijing_TS, main = "Original Dataset: PACF")
 
+#periodogram
+cpgram(Beijing_TS, main = "Cumulative periodogram")
+
+
 #kpss test
 kpss.test(Beijing_TS)
 
 ############################################################
-############logdiff transformation
+############diff log transformation
 log_Beijing_TS <- log(Beijing_TS)
 diff_log_beijing <- diff(log_Beijing_TS)
 
@@ -34,12 +41,20 @@ diff_log_beijing <- diff(log_Beijing_TS)
 plot(diff_log_beijing,main = "Logdiff Dataset: Plot")
 
 #acf
-acf(diff_log_beijing, main = "Logdiff Dataset: ACF")
+acf(diff_log_beijing, main = "Logdiff Dataset: ACF", lag.max = 1000)
+points(c(365, 730), c(0.1,0.1), pch = 22, col = 'red')
+
 
 #pacf
-pacf(diff_log_beijing, main = "Logdiff Dataset: PACF")
+pacf(diff_log_beijing, main = "Logdiff Dataset: PACF", lag.max = 1000)
 #kpss
 kpss.test(diff_log_beijing)
+
+############################################################
+#######diff diff^365 smooth log
+
+
+
 
 ############################################################
 #####Box-Cox Transformations
@@ -83,6 +98,8 @@ model_test$fit$aic
 
 ############################################################STEP2
 
+
+#########ARMA
 ###MA 4
 model_MA4 <- sarima(diff_log_beijing, p = 0, d = 0, q = 4) 
 fit4 <- model_MA4$fit
@@ -92,6 +109,9 @@ fit4 <- model_MA4$fit
 model_MA1 <- sarima(diff_log_beijing, p = 0, d = 0, q = 3) 
 fit1 <- model_MA1$fit
 
+plot(model_MA1$fit$residuals)
+
+acf(model_MA1$fit$residuals^2, lag.max = 500)
 
 ###MA 2
 model_MA2 <- sarima(diff_log_beijing, p = 0, d = 0, q = 2) 
@@ -144,5 +164,23 @@ c("31", fit_ARMA31$aic,fit_ARMA31$loglik)
 c("32", fit_ARMA32$aic,fit_ARMA32$loglik)
 c("33", fit_ARMA33$aic,fit_ARMA33$loglik)
 
+#########SARMA
+diff2 <- diff(diff_log_beijing, lag = 365)
 
+par(mfrow = c(1,2))
+acf(diff2)
+pacf(diff2)
 
+model_sarima <- sarima(diff2, p = 3, d = 0, q = 3, P = 0, D = 0, Q = 0, S = 0)
+qqPlot(model_sarima$fit$residuals)
+
+##########S#########S#########S#########S#########S#########S#########SLBT
+
+lbtsarima <- c(); 
+for (h in 6:20) lbtsarima[h] <- Box.test(model_sarima$residuals,lag=h,type='Ljung-Box',fitdf=30 - 2 - 2)$p.value
+
+plot(lbtsarima, ylim=c(0,1)); abline(h=0.05,col='blue',lty='dotted')
+
+##########S#########S#########S#########S#########S#########S#########Forecasting
+
+plot(forecast(model_sarima, h = 100, level = .95))

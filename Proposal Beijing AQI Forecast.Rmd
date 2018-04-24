@@ -13,24 +13,59 @@ knitr::opts_chunk$set(echo = TRUE)
 library(readr)
 library(car)
 library(tseries)
+
+#Read dataframe
+Beijing <- suppressMessages(read_csv("~/Desktop/Semestre 2/7. Time Series/Project/beijing23 - Sheet1.csv"))
+
+Beijing_TS <- ts(Beijing$AQI)
+
+#logdiff transformation
+log_Beijing_TS <- log(Beijing_TS)
+diff_log_beijing <- diff(log_Beijing_TS)
+
+
 ```
 #Description of the Dataset#
-The dataset contains Air Quality Indices(AQI) at Aoti Zhongxin, Beijing, China between the 2nd of January 2015 to the 30th of January 2018. The method to calculate the AQI can be found here: \url{https://en.wikipedia.org/wiki/Air_quality_index#Computing_the_AQI}.
 
-Initially, the dataset contained a lot of NA's. To take care of this, we took the AQI value at 12:00 everyday. Despite there still being NA's, we then completed the dataset by taking the average between the closest 2 times earlier and later than 12:00 each day. For example, we would take the average of the AQI values at 11:00 and 13:00. This may have consequences on the accuracy of our models, but as there were less than 100 missing values compared to the size of the dataset, which contains 1000+ data points, this incurs only a very minor penalty.
+The data we found are hourly recorded air quality indexes (AQI) at Olympic Centre in Beijing, China. These data defined the degree of the whole air quality in certain area based on the level of sulfur dioxide (SO2), nitrogen dioxide (NO2), suspended particulates smaller than 10 $\mu$m in aerodynamic diameter (PM10), suspended particulates smaller than 2.5 $\mu$m in aerodynamic diameter (PM2.5)，carbon monoxide (CO), and ozone (O3) . Since it is an index demonstrating all the six factors, it has no official unit. The detailed calculation of AQI in Mainland China can be found at this website.
+**ADD REFERENCE**
+\url(http://bz.mep.gov.cn/bzwb/dqhjbh/jcgfffbz/201203/W020120410332725219541.pdf} 
 
-#Exploratory Data Analysis#
+##Data Cleaning##
+
+When we check the specific data, there exist some non-value hours so the data we use is the value of AQI at 12:00 pm measured from the second of January in 2015 to the 30th of January in 2018. In fact, there are still non-value data at 12:00 pm. We then completed the dataset by taking the average between the closest 2 times earlier and later than 12:00 each day. For example, we would take the average of the AQI values at 11:00 and 13:00. This may have consequences on the accuracy of our models, but as there were less than 100 missing values compared to the size of the dataset, which contains 1000+ data points, this incurs only a minor penalty. The original data can be downloaded from a link from the page. 
+
+#Exploratory Data Analysis
+
+Figure 1 shows the rare data set. The time series is clearly no stationary. The variance changes frequently as time increases. And there seems to be a periodicity. To stabilize the variance, we first apply a logarithmic transformation to the data and use the first difference to remove the trend. The processed data is shown in Figure 2. Now it looks like stationary so that we may apply ARMA models to fit it.
+
+Figure 3 shows the correlogram and the partial correlogram of the processed data. We can see in the correlogram that values are almost zero after lag 3 which assumes that an MA(3) model may fit. The partial correlogram tails off which shows an ARMA model may fit.
+
+```{r}
+#Figure 1
+
+plot(Beijing_TS,main = "Original Dataset: Plot", xlab = "Time", ylab = "AQI")
+
+#Figure 2
+plot(diff_log_beijing <- diff(log_Beijing_TS), main = "Processed Data")
+
+#Figure 3
+par(mfrow = c(1,2))
+#acf
+acf(diff_log_beijing, main = "Logdiff Dataset: ACF")
+#pacf
+pacf(diff_log_beijing, main = "Logdiff Dataset: PACF")
+
+
+```
 
 ##Original Dataset##
 We begin first by examining the original dataset with a plot of the dataset and its ACF and PACF plots. To test for stationary, we use the KPSS test. 
 
 
 ```{r, echo=FALSE}
-#Read dataframe
-Beijing <- suppressMessages(read_csv("~/Desktop/Semestre 2/Time Series/Project/beijing23 - Sheet1.csv"))
-
-View(Beijing)
 par(mfrow = c(1, 3),pty = "s")
+
 #time series conversion
 Beijing_TS <- ts(Beijing$AQI)
 plot(Beijing_TS,main = "Original Dataset: Plot", xlab = "Time", ylab = "AQI")
@@ -53,10 +88,6 @@ $$
 where $D$ is the difference operator $D = I - B$ such that $D Y_{t} = Y_{t} - Y_{t-1}$. 
 
 ```{r, echo=FALSE}
-#logdiff transformation
-log_Beijing_TS <- log(Beijing_TS)
-diff_log_beijing <- diff(log_Beijing_TS)
-
 #plots
 par(mfrow = c(1, 3),lheight = 1,pty = "s")
 
