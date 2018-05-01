@@ -4,6 +4,7 @@ library(tseries)
 library(astsa)
 library(smooth)
 library(Mcomp)
+library(fGarch)
 
 #square values of residuals
 #monte carlo simulate t noise
@@ -114,41 +115,37 @@ plot(model_MA1$fit$residuals)
 acf(model_MA1$fit$residuals^2, lag.max = 500)
 
 ###MA 2
-model_MA2 <- sarima(diff_log_beijing, p = 0, d = 0, q = 2) 
+model_MA2 <- sarima(diff_log_beijing, p = 0, d = 0, q = 2, no.constant = TRUE) 
 fit2 <- model_MA2$fit
 
 
 ###ARMA 12
-model_ARMA12 <- sarima(diff_log_beijing, p = 1, d = 0, q = 2) 
+model_ARMA12 <- sarima(diff_log_beijing, p = 1, d = 0, q = 2, no.constant = TRUE) 
 fit_ARMA12 <- model_ARMA12$fit
 
 ###ARMA 13
-model_ARMA13 <- sarima(diff_log_beijing, p = 1, d = 0, q = 3) 
+model_ARMA13 <- sarima(diff_log_beijing, p = 1, d = 0, q = 3, no.constant = TRUE) 
 fit_ARMA13 <- model_ARMA13$fit
 
 ###ARMA 21
-model_ARMA21 <- sarima(diff_log_beijing, p = 2, d = 0, q = 1) 
+model_ARMA21 <- sarima(diff_log_beijing, p = 2, d = 0, q = 1 ,no.constant = TRUE) 
 fit_ARMA21 <- model_ARMA21$fit
 
 ###ARMA 22
-model_ARMA22 <- sarima(diff_log_beijing, p = 2, d = 0, q = 2) 
+model_ARMA22 <- sarima(diff_log_beijing, p = 2, d = 0, q = 2, no.constant = TRUE) 
 fit_ARMA22 <- model_ARMA22$fit
 
+qqPlot(model_ARMA22$fit$residuals)
+
 ###ARMA 22
-model_ARMA23 <- sarima(diff_log_beijing, p = 2, d = 0, q = 3) 
+model_ARMA23 <- sarima(diff_log_beijing, p = 2, d = 0, q = 3, no.constant = TRUE) 
 fit_ARMA23 <- model_ARMA23$fit
 
 ###ARMA 31
-model_ARMA31 <- sarima(diff_log_beijing, p = 3, d = 0, q = 1) 
+model_ARMA31 <- sarima(diff_log_beijing, p = 3, d = 0, q = 1, no.constant = TRUE) 
 fit_ARMA31 <- model_ARMA31$fit
 
-###ARMA 32
-model_ARMA32 <- sarima(diff_log_beijing, p = 3, d = 0, q = 2) 
-fit_ARMA32 <- model_ARMA32$fit
 
-###ARMA 33
-model_ARMA33 <- sarima(diff_log_beijing, p = 3, d = 0, q = 3) 
-fit_ARMA33 <- model_ARMA33$fit
 
 #summary
 c("04", fit4$aic,fit4$loglik)
@@ -163,6 +160,11 @@ c("23", fit_ARMA23$aic,fit_ARMA23$loglik)
 c("31", fit_ARMA31$aic,fit_ARMA31$loglik)
 c("32", fit_ARMA32$aic,fit_ARMA32$loglik)
 c("33", fit_ARMA33$aic,fit_ARMA33$loglik)
+
+
+##########S#########S#########S#########S#########S#########S#########SLBT
+
+
 
 #########SARMA
 diff2 <- diff(diff_log_beijing, lag = 365)
@@ -184,3 +186,34 @@ plot(lbtsarima, ylim=c(0,1)); abline(h=0.05,col='blue',lty='dotted')
 ##########S#########S#########S#########S#########S#########S#########Forecasting
 
 plot(forecast(model_sarima, h = 100, level = .95))
+
+############################################################
+##########PLAYGROUND########################################
+############################################################
+
+
+#get ARMA(2,2)
+s <- auto.arima(diff_log_beijing , max.q = 10, max.Q = 10, 
+                max.d = 1, allowdrift = TRUE, max.D = 1, max.P = 10, 
+                max.p = 10, max.order = 25, stepwise = FALSE, ic = "aic")
+roots1 <- polyroot(c(1, -coef(s)[grep("^ar",names(s$coef))]))
+for_std <- forecast(s)
+autoplot(for_std, include = 5)
+
+#
+s <- auto.arima(diff_log_beijing , max.q = 10, max.Q = 10, 
+                max.d = 1, allowdrift = TRUE, max.D = 1, max.P = 10, 
+                max.p = 10, max.order = 25, stepwise = FALSE, ic = "aic")
+#GARCH
+g <- garchFit(~ arma(2,0) + garch(1, 0), data = diff_log_beijing, cond.dist='norm')
+stdg <- g@residuals/g@sigma.t
+n <- length(stdg)
+
+par(mfrow = c(1,2))
+qqplot(x=qt(p=(1:n)/(n+1),df=10)*sqrt((10-2)/10), y=stdg )
+qqPlot(stdg, distribution = "t", df = 10)
+
+
+
+
+
